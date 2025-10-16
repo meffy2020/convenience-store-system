@@ -70,7 +70,7 @@ class InventoryManagerTest {
         fun `generateUrgentStockReport should correctly identify low stock items`() {
             val products = listOf(
                 Snack("새우깡", 1500, 100, 10), // 10% - low
-                Beverage("콜라", 2000, 100, 30), // 30% - not low
+                Beverage("콜라", 2000, 100, 30, 500), // 30% - not low
                 Food("도시락", 5000, 100, 29, LocalDate.now()) // 29% - low
             )
             val inventoryManager = InventoryManager(products, emptyMap(), 0.3, 3, emptyMap())
