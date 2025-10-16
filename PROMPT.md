@@ -1,29 +1,63 @@
-# AI 프롬프트 사용 기록
+# 편의점 재고 관리 시스템 개발 노트
 
-이 문서는 AI 어시스턴트와 함께 편의점 재고 관리 시스템을 개발하면서 사용한 주요 프롬프트와 그 사용 의도를 기록한 것입니다.
+이 문서는 '24시간 학교 편의점 스마트 재고 관리 시스템' 프로젝트의 개발 과정과 최종 설계 의도를 정리한 노트입니다.
 
-## 1. 초기 프로젝트 설정 및 Phase 1 구현
+## 1. 프로젝트 목표
 
-> **Prompt:** "Okay, I've reviewed the homework assignment. It's a comprehensive task to build a smart inventory management system for a convenience store using Kotlin. The project is divided into three phases, starting with a basic system and progressively adding more advanced features like data analysis and extensibility. I'm ready to get started. What would you like me to do first? I can begin by setting up the project structure as outlined in the PDF, creating the necessary directories and files."
+단순히 주어진 요구사항을 구현하는 것을 넘어, 실제 운영 환경에서도 안정적으로 동작하고, 미래의 기능 확장에도 유연하게 대응할 수 있는 **'잘 설계된 소프트웨어'**를 만드는 것을 목표로 했습니다.
 
-- **의도:** AI에게 과제 내용을 인지시키고, 프로젝트의 첫 단계인 기본 구조 설정을 요청했습니다. 이를 통해 AI가 전체적인 맥락을 이해하고 다음 단계를 준비하도록 유도했습니다.
+## 2. 개발 단계별 접근 방식
 
-> **Prompt:** "Based on my analysis of the homework, there's a discrepancy between the provided sample data and the expected output. I'll proceed with the assumption that in the `Product` data class, `stock` represents the ideal stock, and `safetyStock` represents the current stock. The report is generated from the initial data, and the sales data will be used for the next cycle. I'll now implement the logic for generating the reports in `Main.kt`, starting with the urgent stock alerts."
+### Phase 1: 기본 기능 구현
 
-- **의도:** 과제 PDF의 데이터 불일치 문제를 발견하고, 이를 해결하기 위한 명확한 가설(stock -> 적정재고, safetyStock -> 현재재고)을 AI에게 제시했습니다. 이를 통해 모호한 부분을 명확히 하고, 일관된 로직으로 구현을 진행하도록 지시했습니다.
+- **목표:** 과제에서 요구하는 6가지 기본 리포트(긴급 재고, 유통기한 등)를 정확히 출력하는 핵심 기능 구현.
+- **고민과 해결:** 초기 데이터 분석 시, PDF의 샘플 데이터와 출력 예시 간에 약간의 불일치가 있었습니다. 이를 해결하기 위해 `stock`은 '목표로 하는 적정 재고', `safetyStock`은 '현재 보유 재고'로 명확히 역할을 정의하고 로직을 구현하여 일관성을 확보했습니다.
 
-## 2. Phase 2: 확장 함수를 이용한 기능 추가
+### Phase 2: 기능 확장과 코드 중복 최소화
 
-> **Prompt:** "Phase 1 is complete. Now for Phase 2: Smart Analysis. I'll use extension functions in `ProductExtensions.kt` to avoid modifying the `Product` class. My plan is to first calculate the updated stock after sales. Then, I'll create extension functions for `isStockLow()`, `getInventoryTurnoverRate()`, and `getSalesEfficiency()`. Finally, I'll use these in `Main.kt` to generate the 'Management Analysis Report' and 'Overall Operation Status' report. I'll start by implementing the `isStockLow` extension function."
+- **목표:** 재고 회전율, 판매 효율 등 고급 분석 기능을 추가하되, 기존의 데이터 클래스(`Product`)는 수정하지 않는다는 제약 조건 준수.
+- **고민과 해결:** '확장 함수(Extension Function)'를 도입하여 이 문제를 해결했습니다. `Product` 클래스 자체를 건드리지 않으면서도 마치 원래 있던 메소드처럼 분석 함수들을 추가할 수 있었습니다. 하지만 이 과정에서 모든 로직이 `Main.kt`에 집중되어 코드가 비대해지는 문제점을 인지하게 되었습니다.
 
-- **의도:** Phase 2의 핵심 요구사항인 '기존 클래스 수정 없이 기능 추가'를 해결하기 위해 '확장 함수'라는 구체적인 기술을 사용하도록 명시했습니다. 또한, 구현할 기능들을 명확히 나열하여 AI가 체계적으로 코드를 작성하도록 안내했습니다.
+### Phase 3: 객체지향 설계를 통한 리팩토링
 
-## 3. Phase 3: 상속과 인터페이스를 이용한 리팩토링
+- **목표:** Phase 2에서 발생한 문제점을 해결하고, 향후 '생활용품' 등 새로운 상품 카테고리가 추가될 상황에 대비한 확장성 있는 구조 설계.
+- **고민과 해결:**
+    1.  **인터페이스 도입:** 모든 상품이 가져야 할 공통 속성(이름, 가격 등)과 기능(재고 부족 확인 등)을 `Product` 인터페이스에 정의했습니다.
+    2.  **상속 구조 설계:** 각 상품(음식, 음료, 과자)을 `Product` 인터페이스를 구현하는 별도의 데이터 클래스로 만들고, 각자의 고유 속성(유통기한, 용량 등)을 추가했습니다.
+    3.  **역할 분리:** `Main.kt`에 있던 모든 재고 관리 로직을 `InventoryManager`라는 전문 클래스로 이전했습니다. 이로써 `Main.kt`는 사용자 입력을 받고 `InventoryManager`에게 작업을 지시하는 역할만 맡게 되어, 각 클래스의 책임이 명확해졌습니다. (관심사의 분리, Separation of Concerns)
 
-> **Prompt:** "Phase 2 is done. Now for Phase 3: Extensible System Design. I'll refactor the `Product` class into an interface with common properties and a `display()` method. Then, I'll create concrete classes like `Food`, `Beverage`, and `HouseholdGood` implementing `Product` with their own specific properties. All inventory logic from `Main.kt` will move to a new `InventoryManager` class that manages a list of `Product`s. `Main.kt` will then just instantiate and use `InventoryManager`. I'll start by defining the `Product` interface in `AdvancedProduct.kt`."
+## 3. 최종 개선 작업 (A+를 위한 노력)
 
-- **의도:** Phase 3의 목표인 '확장 가능한 구조'를 구현하기 위해 인터페이스, 상속, 그리고 관리자 클래스(`InventoryManager`) 도입이라는 구체적인 리팩토링 계획을 제시했습니다. 이는 전체적인 프로그램의 구조를 어떻게 변경할 것인지 명확하게 지시하여, AI가 큰 그림을 이해하고 코드를 재구성하도록 하기 위함이었습니다.
+- **목표:** 단순한 과제 제출용 코드가 아닌, 실제 사용자를 고려한 완성도 높은 애플리케이션으로 발전.
+- **구현 내용:**
+    1.  **안정성 강화:** 판매 목록에는 있지만 상품 목록에는 없는 데이터가 들어왔을 때 프로그램이 강제 종료되는 잠재적 오류를 `if (product != null)`과 같은 방어 코드로 해결했습니다.
+    2.  **신뢰성 확보:** 핵심 계산 로직이 정확히 동작하는지 검증하기 위해 JUnit5 기반의 단위 테스트 코드를 작성하고, 다양한 엣지 케이스(e.g., 판매량이 0일 때)를 테스트했습니다.
+    3.  **사용자 경험(UX) 개선:**
+        - 사용자가 원하는 리포트만 골라서 볼 수 있는 **대화형 메뉴**를 구현했습니다.
+        - ASCII 아트와 깔끔한 포맷팅을 통해 딱딱한 터미널 출력을 **시각적으로 개선**했습니다.
+    4.  **문서화:** 다른 사람이 이 프로젝트를 쉽게 이해하고 실행할 수 있도록 `README.md` 파일을 상세하고 명확하게 재작성했습니다.
 
-> **Prompt:** "In the AdvancedProduct.kt file, I will refactor the code to move the common logic for `isStockLow`, `getInventoryTurnoverRate`, and `getSalesEfficiency` into the `Product` interface as default implementations. This will reduce code duplication in the concrete classes."
+## 4. 최종 완성도 향상 (마무리 작업)
 
-- **의도:** 하위 클래스들에서 중복되는 코드를 발견하고, 이를 인터페이스의 기본 구현(default implementation)으로 옮겨 코드 중복을 제거하고 유지보수성을 높이도록 지시했습니다. 이는 좋은 객체지향 설계 원칙을 코드에 적용하기 위한 것이었습니다.
+- **목표:** 전문가 수준의 코드를 만들기 위한 마지막 폴리싱 작업.
+- **구현 내용:**
+    1. **KDoc 문서화:** 모든 public 클래스와 함수에 KDoc 주석을 달아, 코드 자체만으로도 각 기능의 역할과 사용법을 명확히 이해할 수 있도록 문서화 수준을 높였습니다.
+    2. **테스트 품질 향상:** 테스트 파일의 구조를 `Nested` 클래스를 사용하여 개선하고, `InventoryManager`의 로직을 직접 검증하는 테스트 케이스를 추가하여 테스트의 완성도를 높였습니다.
+
+## 5. 최종 프로젝트 구조
+
+```
+convenience-store-system/
+├── build.gradle
+├── src/
+│   ├── main/kotlin/  # 소스 코드
+│   │   ├── Main.kt
+│   │   └── store/
+│   │       ├── Product.kt (인터페이스)
+│   │       ├── Food.kt, Beverage.kt, ... (데이터 클래스)
+│   │       └── InventoryManager.kt (핵심 로직)
+│   └── test/kotlin/    # 테스트 코드
+│       └── store/
+│           └── InventoryManagerTest.kt
+└── README.md         # 프로젝트 설명 및 실행 방법
+```
